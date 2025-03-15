@@ -15,7 +15,8 @@ TRAIN_DATA_CSV = ""
 TEST_DATA_CSV = ""
 
 # Path of save model.
-SAVED_MODEL_PATH = "./saved_model/pretrained/saved_model.pt"
+SAVED_MODEL_PATH = "./saved_model/trained_model.pt"
+# ./saved_model/trained_model"
 # "saved_model/pretrained/saved_model.pt"
 
 
@@ -36,16 +37,16 @@ BI_LSTM = True
 FRAME_AGGREGATION_MEAN = True
 
 # If true, we use transformer instead of LSTM.
-USE_TRANSFORMER = False
+USE_TRANSFORMER = True
 
 # Dimension of transformer layers.
-TRANSFORMER_DIM = 32
+TRANSFORMER_DIM = 64
 
 # Number of encoder layers for transformer
-TRANSFORMER_ENCODER_LAYERS = 2
+TRANSFORMER_ENCODER_LAYERS = 4
 
 # Number of heads in transformer layers.
-TRANSFORMER_HEADS = 8
+TRANSFORMER_HEADS = 4
 
 # Sequence length of the sliding window for LSTM.
 SEQ_LEN = 100  # 3.2 seconds
@@ -54,16 +55,16 @@ SEQ_LEN = 100  # 3.2 seconds
 TRIPLET_ALPHA = 0.1
 
 # How many triplets do we train in a single batch.
-BATCH_SIZE = 8
+BATCH_SIZE = 32
 
 # Learning rate.
-LEARNING_RATE = 0.0001
+LEARNING_RATE = 0.00005
 
 # Save a model to disk every these many steps.
 SAVE_MODEL_FREQUENCY = 10000
 
 # Number of steps to train.
-TRAINING_STEPS = 100000
+TRAINING_STEPS = 10000
 
 # Whether we are going to train with SpecAugment.
 SPECAUG_TRAINING = False

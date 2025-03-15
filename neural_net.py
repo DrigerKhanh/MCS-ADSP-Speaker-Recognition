@@ -10,7 +10,6 @@ import dataset
 import feature_extraction
 import myconfig
 
-
 class BaseSpeakerEncoder(nn.Module):
     def _load_from(self, saved_model):
         var_dict = torch.load(saved_model, map_location=myconfig.DEVICE)
@@ -89,12 +88,13 @@ def get_speaker_encoder(load_from=""):
         return LstmSpeakerEncoder(load_from).to(myconfig.DEVICE)
 
 
-def get_triplet_loss(anchor, pos, neg):
+def get_triplet_loss(anchor, pos, neg, margin=0.3):
     """Triplet loss defined in https://arxiv.org/pdf/1705.02304.pdf."""
     cos = nn.CosineSimilarity(dim=-1, eps=1e-6)
-    return torch.maximum(
-        cos(anchor, neg) - cos(anchor, pos) + myconfig.TRIPLET_ALPHA,
-        torch.tensor(0.0))
+    return torch.clamp(
+        cos(anchor, neg) - cos(anchor, pos) + margin,
+        min=0.0
+    )
 
 
 def get_triplet_loss_from_batch_output(batch_output, batch_size):
@@ -122,9 +122,15 @@ def save_model(saved_model_path, encoder, losses, start_time):
 
 
 def train_network(spk_to_utts, num_steps, saved_model=None, pool=None):
+    # Release GPU memory
+    # torch.cuda.empty_cache()
+
     start_time = time.time()
     losses = []
     encoder = get_speaker_encoder()
+
+    # accelerate enconder training
+    # encoder = torch.compile(encoder)
 
     # Train
     optimizer = optim.Adam(encoder.parameters(), lr=myconfig.LEARNING_RATE)
@@ -141,6 +147,9 @@ def train_network(spk_to_utts, num_steps, saved_model=None, pool=None):
         loss = get_triplet_loss_from_batch_output(
             batch_output, myconfig.BATCH_SIZE)
         loss.backward()
+
+        torch.nn.utils.clip_grad_norm_(encoder.parameters(), max_norm=1.0)
+
         optimizer.step()
         losses.append(loss.item())
         print("step:", step, "/", num_steps, "loss:", loss.item())
@@ -162,6 +171,12 @@ def train_network(spk_to_utts, num_steps, saved_model=None, pool=None):
 
 
 def run_training():
+    print("Using device:", myconfig.DEVICE)
+
+    print("CUDA available:", torch.cuda.is_available())
+    # print("Current device:", torch.cuda.current_device())
+    # print("Device name:", torch.cuda.get_device_name(torch.cuda.current_device()))
+
     if myconfig.TRAIN_DATA_CSV:
         spk_to_utts = dataset.get_csv_spk_to_utts(
             myconfig.TRAIN_DATA_CSV)
